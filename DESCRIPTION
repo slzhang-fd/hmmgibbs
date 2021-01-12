@@ -1,16 +1,18 @@
 Package: hmmgibbs
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Siliang",
+           family = "Zhang",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           email = "zhangsiliang123@gmail.com")
+Maintainer: Siliang Zhang <zhangsiliang123@gmail.com>
 Description: What the package does (one paragraph).
 License: use_mit_license()
 Encoding: UTF-8
-Imports: armspp, MCMCpack
+Depends: R, coda
+Imports: Rcpp, armspp, MCMCpack
+LinkingTo: Rcpp, RcppArmadillo
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
