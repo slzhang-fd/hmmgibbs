@@ -9,9 +9,11 @@ J <- 8
 
 ## coefficients for pi
 alpha_tp <- rbind(rnorm(J, 0,1), runif(J))
+alpha_fp <- rbind(rnorm(J, 0,1), runif(J))
 
 ## random effect u_tp, u_fp
 sig2_u_tp <- 1
+sig2_u_fp <- 1.5
 u_tp <- rnorm(N, 0, sd = sqrt(sig2_u_tp))
 
 ## time variant intercepts for lambda
