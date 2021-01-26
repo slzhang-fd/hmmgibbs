@@ -3,7 +3,7 @@
 #' @useDynLib hmmgibbs
 #' @importFrom Rcpp evalCpp
 #'
-#' @export sample_struc
+#' @export sample_alpha
 sample_alpha <- function(y_tp, C_it_tp, alpha_tp0, mcmc_len){
   alpha_tp_draws <- matrix(0, mcmc_len, 2*J)
   for(iter in 1:mcmc_len){

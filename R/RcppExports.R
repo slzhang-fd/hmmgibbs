@@ -2,6 +2,11 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
+sample_alpha_cpp <- function(y_tpfp, C_tpfp, alpha_tpfp) {
+    .Call('_hmmgibbs_sample_alpha_cpp', PACKAGE = 'hmmgibbs', y_tpfp, C_tpfp, alpha_tpfp)
+}
+
+#' @export
 log_u_pdf_check <- function(x, bj, d1, beta, sigma2, Ci_tp) {
     .Call('_hmmgibbs_log_u_pdf_check', PACKAGE = 'hmmgibbs', x, bj, d1, beta, sigma2, Ci_tp)
 }
@@ -13,5 +18,9 @@ sample_u_cpp_check <- function(bj, d1, beta, sigma2, C_mat, nsamp, ii) {
 
 sample_u_cpp <- function(bj, d1, beta, sigma2, C_mat) {
     .Call('_hmmgibbs_sample_u_cpp', PACKAGE = 'hmmgibbs', bj, d1, beta, sigma2, C_mat)
+}
+
+sample_u2p_cpp <- function(b_tpfp, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp) {
+    .Call('_hmmgibbs_sample_u2p_cpp', PACKAGE = 'hmmgibbs', b_tpfp, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp)
 }
 

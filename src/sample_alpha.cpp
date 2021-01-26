@@ -31,8 +31,9 @@ double log_alpha1_pdf(double x, void* params){
   return -1.0/200 * x * x +
     arma::accu(d->y_tp_fp_j % tmp - arma::log(1.0 + arma::exp(tmp)));
 }
+//' @export
 // [[Rcpp::export]]
-arma::vec sample_alpha_cpp(arma::mat y_tpfp, arma::vec C_tpfp,
+arma::mat sample_alpha_cpp(arma::mat y_tpfp, arma::vec C_tpfp,
                            arma::mat alpha_tpfp){
   int err, ninit = 4, npoint = 100, nsamp = 1, ncent = 0;
   int neval;
@@ -49,6 +50,7 @@ arma::vec sample_alpha_cpp(arma::mat y_tpfp, arma::vec C_tpfp,
   log_alpha_data.C_tp_fp = C_tpfp;
   for(unsigned int j = 0; j<J;++j){
     // sample alpha_tp_0j
+    // Rcpp::Rcout << "j= " << j << std::endl;
     log_alpha_data.y_tp_fp_j = y_tpfp.col(j);
     log_alpha_data.alpha10_j = alpha_tpfp(1, j);
     err = arms(xinit,ninit,&xl,&xr,log_alpha0_pdf,&log_alpha_data,&convex,

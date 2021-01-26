@@ -1,117 +1,187 @@
-#' @export latent_trans2p
-latent_trans2p <- function(y_tp, y_fp, C_it_tp, C_it_fp,
-                           u_tp0, u_fp0, alpha_tp0, alpha_fp0,
-                           struc_params0, free_params, mcmc_len){
-  bj <- struc_params0[1:wave_num]
-  d1 <- struc_params0[wave_num+1]
-  beta <- struc_params0[wave_num+2]
-  sigma2 <- struc_params0[wave_num+3]
 
-  struc_params_draw <- matrix(0, mcmc_len, length(struc_params0))
+#' @export sample_struc2p
+sample_struc2p <- function(C_it_tp, C_it_fp, u_tp0, u_fp0, struc_params0){
+  # struc_params = list(b_tp, b_fp, d_tp, d_fp, beta_tp, beta_fp, rho_u)
+  b_tp <- struc_params0$b_tp
+  b_fp <- struc_params0$b_fp
+  d_tp <- struc_params0$d_tp
+  d_fp <- struc_params0$d_fp
+  beta_tp <- struc_params0$beta_tp
+  beta_fp <- struc_params0$beta_fp
+  rho_u <- struc_params0$rho_u
+
+  N <- length(u_tp0)
+  wave_num <- length(C_it_tp) / N
+
+  # sample b_tpfp1
+  log_b_tp1_pdf <- function(x){
+    tmp <- x + d_tp * u_tp0
+    -1/200 * x^2 + sum(C_it_tp[1:N] * tmp - log(1 + exp(tmp)))
+  }
+  b_tp[1] <- arms(1, log_b_tp1_pdf, -10, 10, metropolis = FALSE)
+  log_b_fp1_pdf <- function(x){
+    tmp <- x + d_fp * u_fp0
+    -1/200 * x^2 + sum(C_it_fp[1:N] * tmp - log(1 + exp(tmp)))
+  }
+  b_fp[1] <- arms(1, log_b_fp1_pdf, -10, 10, metropolis = FALSE)
+  # sample b_tpfp_2-t
+  for(t in 2:wave_num){
+    log_b_tpj_pdf <- function(x){
+      tmp <- x + beta_tp[1] * C_it_tp[1:N + (t-2)*N] + beta_tp[2] * C_it_fp[1:N + (t-2)*N] + u_tp0
+      -1/200 * x^2 + sum(C_it_tp[(t-1)*N + (1:N)] * tmp - log(1 + exp(tmp)))
+    }
+    b_tp[t] <- arms(1, log_b_tpj_pdf, -10, 10, metropolis = FALSE)
+    log_b_fpj_pdf <- function(x){
+      tmp <- x + beta_fp[1] * C_it_fp[1:N + (t-2)*N] + beta_fp[2] * C_it_tp[1:N + (t-2)*N] + u_fp0
+      -1/200 * x^2 + sum(C_it_fp[(t-1)*N + (1:N)] * tmp - log(1 + exp(tmp)))
+    }
+    b_fp[t] <- arms(1, log_b_fpj_pdf, -10, 10, metropolis = FALSE)
+  }
+  # sample d_tp, d_fp
+  log_d_tp_pdf <- function(x){
+    tmp <- b_tp[1] + x * u_tp0
+    -1/200 * x^2 + sum(C_it_tp[1:N] * (tmp) - log(1 + exp(tmp)))
+  }
+  d_tp <- arms(1, log_d_tp_pdf, -10, 10, metropolis = FALSE)
+  log_d_fp_pdf <- function(x){
+    tmp <- b_fp[1] + x * u_fp0
+    -1/200 * x^2 + sum(C_it_fp[1:N] * (tmp) - log(1 + exp(tmp)))
+  }
+  d_fp <- arms(1, log_d_fp_pdf, -10, 10, metropolis = FALSE)
+  ## sample beta_tp, beta_fp
+  log_beta_tp1_pdf <- function(x){
+    log_beta_tp1_val <- -1/200 * x^2
+    for(t in 2:wave_num){
+      tmp <- b_tp[t] + x * C_it_tp[1:N + (t-2)*N] + beta_tp[2] * C_it_fp[1:N+(t-2)*N] + u_tp0
+      log_beta_tp1_val <- log_beta_tp1_val + sum(C_it_tp[(t-1)*N + (1:N)] * tmp - log(1 + exp(tmp)))
+    }
+    log_beta_tp1_val
+  }
+  beta_tp[1] <- arms(1, log_beta_tp1_pdf, -10, 10, metropolis = FALSE)
+  log_beta_tp2_pdf <- function(x){
+    log_beta_tp2_val <- -1/200 * x^2
+    for(t in 2:wave_num){
+      tmp <- b_tp[t] + beta_tp[1] * C_it_tp[1:N + (t-2)*N] + x * C_it_fp[1:N+(t-2)*N] + u_tp0
+      log_beta_tp2_val <- log_beta_tp2_val + sum(C_it_tp[(t-1)*N + (1:N)] * tmp - log(1 + exp(tmp)))
+    }
+    log_beta_tp2_val
+  }
+  beta_tp[2] <- arms(1, log_beta_tp2_pdf, -10, 10, metropolis = FALSE)
+  log_beta_fp1_pdf <- function(x){
+    log_beta_fp1_val <- -1/200 * x^2
+    for(t in 2:wave_num){
+      tmp <- b_fp[t] + x * C_it_fp[1:N + (t-2)*N] + beta_fp[2] * C_it_tp[1:N+(t-2)*N] + u_fp0
+      log_beta_fp1_val <- log_beta_fp1_val + sum(C_it_fp[(t-1)*N + (1:N)] * tmp - log(1 + exp(tmp)))
+    }
+    log_beta_fp1_val
+  }
+  beta_fp[1] <- arms(1, log_beta_fp1_pdf, -10, 10, metropolis = FALSE)
+  log_beta_fp2_pdf <- function(x){
+    log_beta_fp2_val <- -1/200 * x^2
+    for(t in 2:wave_num){
+      tmp <- b_fp[t] + beta_fp[1] * C_it_fp[1:N + (t-2)*N] + x * C_it_tp[1:N+(t-2)*N] + u_fp0
+      log_beta_fp2_val <- log_beta_fp2_val + sum(C_it_fp[(t-1)*N + (1:N)] * tmp - log(1 + exp(tmp)))
+    }
+    log_beta_fp2_val
+  }
+  beta_fp[2] <- arms(1, log_beta_fp2_pdf, -10, 10, metropolis = FALSE)
+  ## sample rho_u
+  log_rho_u_pdf <- function(x){
+    -0.5 * N * log(1-x^2) - 0.5 / (1-x^2) * sum(u_tp0^2 - 2*x*u_tp0*u_fp0 + u_fp0^2)
+  }
+  rho_u <- arms(1, log_rho_u_pdf, -1, 1, metropolis = TRUE, previous = rho_u)
+  ## sample u_tp0, u_fp0
+  u_tp0 <- sample_u2p_cpp(b_tp, d_tp, beta_tp, rho_u, matrix(C_it_tp, N), matrix(C_it_fp, N), u_fp0)
+  u_fp0 <- sample_u2p_cpp(b_fp, d_fp, beta_fp, rho_u, matrix(C_it_fp, N), matrix(C_it_tp, N), u_tp0)
+  # struc_params = list(b_tp, b_fp, d_tp, d_fp, beta_tp, beta_fp, rho_u)
+  list(params = list(b_tp = b_tp,
+       b_fp = b_fp,
+       d_tp = d_tp,
+       d_fp = d_fp,
+       beta_tp = beta_tp,
+       beta_fp = beta_fp,
+       rho_u = rho_u),
+       u_tp0 = u_tp0,
+       u_fp0 = u_fp0)
+}
+#' @export sample_struc2p
+sample_C <- function(y_tpfp, u_tpfp, u_fptp, C_tpfp, C_fptp,
+                     alpha_tpfp, alpha_fptp, b_tpfp, b_fptp, d_tpfp,
+                     beta_tpfp, beta_fptp){
+  N <- length(u_tpfp)
+  lambda1 <- t(alpha_tpfp[1,] + outer(alpha_tpfp[2,], rep(1,N)))
+  lambda0 <- t(alpha_tpfp[1,] + outer(alpha_tpfp[2,], rep(0,N)))
+
+  tmp <- b_tpfp[1] + d_tpfp * u_tpfp
+  tmp1 <- b_tpfp[2] + beta_tpfp[1] + beta_tpfp[2] * C_fptp[1:N] + u_tpfp
+  tmp2 <- b_fptp[2] + beta_fptp[1] * C_fptp[1:N] + beta_fptp[2] + u_fptp
+  parts1 <- rowSums(lambda1 * y_tpfp[1:N,] - log(1+exp(lambda1))) +
+    tmp - log(1+exp(tmp)) +
+    C_tpfp[N+1:N] * tmp1 - log(1+exp(tmp1)) +
+    C_fptp[N+1:N] * tmp2 - log(1+exp(tmp2))
+  tmp10 <- b_tpfp[2] + beta_tpfp[2] * C_fptp[1:N] + u_tpfp
+  tmp20 <- b_fptp[2] + beta_fptp[1] * C_fptp[1:N] + u_fptp
+  parts0 <- rowSums(lambda0 * y_tpfp[1:N,] - log(1+exp(lambda0)))+
+    - log(1+exp(tmp)) +
+    C_tpfp[N+1:N] * tmp10 - log(1+exp(tmp10)) +
+    C_fptp[N+1:N] * tmp20 - log(1+exp(tmp20))
+  C_tpfp[1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
+
+  tmp <- b_tpfp[2] + beta_tpfp[1] * C_tpfp[1:N] + beta_tpfp[2] * C_fptp[1:N] + u_tpfp
+  tmp1 <- b_tpfp[3] + beta_tpfp[1] + beta_tpfp[2] * C_fptp[N+1:N] + u_tpfp
+  tmp2 <- b_fptp[3] + beta_fptp[1] * C_fptp[N+1:N] + beta_fptp[2] + u_fptp
+  parts1 <- rowSums(lambda1 * y_tpfp[N+1:N,] - log(1+exp(lambda1))) +
+    tmp - log(1+exp(tmp)) +
+    C_tpfp[2*N+1:N] * tmp1 - log(1+exp(tmp1))+
+    C_fptp[2*N+1:N] * tmp2 - log(1+exp(tmp2))
+  tmp10 <- b_tpfp[3] + beta_tpfp[2] * C_fptp[N+1:N] + u_tpfp
+  tmp20 <- b_fptp[3] + beta_fptp[1] * C_fptp[N+1:N] + u_fptp
+  parts0 <- rowSums(lambda0 * y_tpfp[N+1:N,] - log(1+exp(lambda0))) +
+    - log(1+exp(tmp)) +
+    C_tpfp[2*N+1:N] * tmp10 - log(1+exp(tmp10))+
+    C_fptp[2*N+1:N] * tmp20 - log(1+exp(tmp20))
+  C_tpfp[N+1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
+
+  tmp <- b_tpfp[3] + beta_tpfp[1] * C_tpfp[N+1:N] + beta_tpfp[2] * C_fptp[N+1:N] + u_tpfp
+  parts1 <- rowSums(lambda1 * y_tpfp[2*N+1:N,] - log(1+exp(lambda1))) + tmp - log(1+exp(tmp))
+  parts0 <- rowSums(lambda0 * y_tpfp[2*N+1:N,] - log(1+exp(lambda0))) - log(1+exp(tmp))
+  C_tpfp[2*N+1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
+  C_tpfp
+}
+
+#' @export latent_trans2p
+latent_trans2p <- function(y_tp, y_fp,
+                           C_it_tp, C_it_fp, u_tp0, u_fp0,
+                           alpha_tp0, alpha_fp0, struc_params0,
+                           mcmc_len){
+  struc_params_draw <- matrix(0, mcmc_len, length(unlist(struc_params0)))
   alpha_tp_draws <- matrix(0, mcmc_len, 2*J)
   alpha_fp_draws <- matrix(0, mcmc_len, 2*J)
 
   for(iter in 1:mcmc_len){
     cat('iter= ', iter, '\n')
-    for(j in 1:J){
-      log_alpha0_j <- function(x){
-        tmp <- x + alpha_tp0[2,j] * C_it_tp
-        -1/200 * x^2 + sum(y_tp[,j] * tmp - log(1 + exp(tmp)))
-      }
-      log_alpha1_j <- function(x){
-        tmp <- alpha_tp0[1,j] + x * C_it_tp
-        -1/200 * x^2 + sum(y_tp[,j] * tmp - log(1 + exp(tmp)))
-      }
-      alpha_tp0[1,j] <- arms(1, log_alpha0_j, -10, 10, metropolis = FALSE)
-      alpha_tp0[2,j] <- arms(1, log_alpha1_j, -10, 10, metropolis = FALSE)
-    }
-    # sample b1
-    if(free_params[1]){
-      log_b1_pdf <- function(x){
-        tmp <- x + d1 * u_tp0
-        -1/200 * x^2 + sum(C_it_tp[1:N] * (tmp) - log(1 + exp(tmp)))
-      }
-      bj[1] <- arms(1, log_b1_pdf, -10, 10, metropolis = FALSE)
-    }
-    # sample b2-bt
-    for(t in 2:wave_num){
-      log_bj_pdf <- function(x){
-        tmp <- x + beta * C_it_tp[1:N + (t-2)*N] + u_tp0
-        -1/200 * x^2 + sum(C_it_tp[(t-1)*N + (1:N)] * (tmp) - log(1 + exp(tmp)))
-      }
-      if(free_params[t]){
-        bj[t] <- arms(1, log_bj_pdf, -10, 10, metropolis = FALSE)
-      }
-    }
-    # sample d1
-    if(free_params[4]){
-      log_d1_pdf <- function(x){
-        tmp <- bj[1] + x * u_tp0
-        -1/200 * x^2 + sum(C_it_tp[1:N] * (tmp) - log(1 + exp(tmp)))
-      }
-      d1 <- arms(1, log_d1_pdf, -10, 10, metropolis = FALSE)
-    }
-    ## sample beta
-    if(free_params[5]){
-      log_beta_pdf <- function(x){
-        log_beta_val <- -1/200 * x^2
-        for(t in 2:wave_num){
-          tmp <- bj[t] + x * C_it_tp[1:N + (t-2)*N] + u_tp0
-          log_beta_val <- log_beta_val + sum(C_it_tp[(t-1)*N + (1:N)] * (tmp) - log(1 + exp(tmp)))
-        }
-        log_beta_val
-      }
-      beta <- arms(1, log_beta_pdf, -10, 10, metropolis = FALSE)
-    }
-    # ## sample sigma2
-    if(free_params[6]){
-      sigma2 <- rinvgamma(1, 2 + N/2, 1 + sum(u_tp0^2)/2)
-    }
-    # ## sample u_tp0
-    u_tp0 <- sample_u_cpp(bj, d1, beta, sigma2, matrix(C_it_tp, N))
-    # for(i in 1:N){
-    #   log_u_pdf <- function(x){
-    #     tmp <- bj[1] + d1 * x
-    #     log_u_val <- -0.5 / sigma2 * x^2 + C_it_tp[i] * tmp - log(1+exp(tmp))
-    #     for(t in 2:wave_num){
-    #       tmp <- bj[t] + beta * C_it_tp[(t-2)*N + i] + x
-    #       log_u_val <- log_u_val + C_it_tp[(t-1)*N+i] * tmp - log(1+exp(tmp))
-    #     }
-    #     log_u_val
-    #   }
-    #   u_tp0[i] <- arms(1, log_u_pdf, -10, 10, metropolis = FALSE)
-    # }
+    ## sample measurement parameters: alpha_tp, alpha_fp
+    alpha_tp0 <- sample_alpha_cpp(y_tp, C_it_tp, alpha_tp0)
+    alpha_fp0 <- sample_alpha_cpp(y_fp, C_it_fp, alpha_fp0)
+
+    # sample structure parameters:
+    struc_temp <- sample_struc2p(C_it_tp, C_it_fp, u_tp0, u_fp0, struc_params0)
+    struc_params0 <- struc_temp$params
+    u_tp0 <- struc_temp$u_tp0
+    u_fp0 <- struc_temp$u_fp0
     ## sample C_it_tp
-    lambda1 <- t(alpha_tp0[1,] + outer(alpha_tp0[2,], rep(1,N)))
-    lambda0 <- t(alpha_tp0[1,] + outer(alpha_tp0[2,], rep(0,N)))
-
-    parts1 <- rowSums(lambda1 * y_tp[1:N,] - log(1+exp(lambda1)))
-    tmp <- bj[1] + d1 * u_tp0
-    tmp1 <- bj[2] + beta + u_tp0
-    parts1 <- parts1 + tmp - log(1+exp(tmp)) + C_it_tp[N+1:N] * tmp1 - log(1+exp(tmp1))
-    parts0 <- rowSums(lambda0 * y_tp[1:N,] - log(1+exp(lambda0)))
-    tmp0 <- bj[2] + u_tp0
-    parts0 <- parts0 - log(1+exp(tmp)) + C_it_tp[N+1:N] * tmp0 - log(1+exp(tmp0))
-    C_it_tp[1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
-
-    parts1 <- rowSums(lambda1 * y_tp[N+1:N,] - log(1+exp(lambda1)))
-    tmp <- bj[2] + beta * C_it_tp[1:N] + u_tp0
-    tmp1 <- bj[3] + beta + u_tp0
-    parts1 <- parts1 + tmp - log(1+exp(tmp)) + C_it_tp[2*N+1:N] * tmp1 - log(1+exp(tmp1))
-    parts0 <- rowSums(lambda0 * y_tp[N+1:N,] - log(1+exp(lambda0)))
-    tmp0 <- bj[3] + u_tp0
-    parts0 <- parts0 - log(1+exp(tmp)) + C_it_tp[2*N+1:N] * tmp0 - log(1+exp(tmp0))
-    C_it_tp[N+1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
-
-    parts1 <- rowSums(lambda1 * y_tp[2*N+1:N,] - log(1+exp(lambda1)))
-    tmp <- bj[3] + beta * C_it_tp[N+1:N] + u_tp0
-    parts1 <- parts1 + tmp - log(1+exp(tmp))
-    parts0 <- rowSums(lambda0 * y_tp[2*N+1:N,] - log(1+exp(lambda0)))
-    parts0 <- parts0 - log(1+exp(tmp))
-    C_it_tp[2*N+1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
-    #
-    struc_params_draw[iter,] <- c(bj, d1, beta, sigma2)
+    C_it_tp <- sample_C(y_tp, u_tp0, u_fp0, C_it_tp, C_it_fp, alpha_tp0, alpha_fp0,
+                        struc_params0$b_tp, struc_params0$b_fp, struc_params0$d_tp,
+                        struc_params0$beta_tp, struc_params0$beta_fp)
+    C_it_fp <- sample_C(y_fp, u_fp0, u_tp0, C_it_fp, C_it_tp, alpha_fp0, alpha_tp0,
+                        struc_params0$b_fp, struc_params0$b_tp, struc_params0$d_fp,
+                        struc_params0$beta_fp, struc_params0$beta_tp)
+    # store results
     alpha_tp_draws[iter,] <- c(alpha_tp0)
+    alpha_fp_draws[iter,] <- c(alpha_fp0)
+    struc_params_draw[iter,] <- unlist(struc_params0)
   }
-  list(alpha_tp_draws, struc_params_draw)
+  list(alpha_tp_draws=alpha_tp_draws,
+       alpha_fp_draws=alpha_fp_draws,
+       struc_params_draws=struc_params_draw)
 }

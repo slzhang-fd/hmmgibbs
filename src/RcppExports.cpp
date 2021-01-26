@@ -6,6 +6,19 @@
 
 using namespace Rcpp;
 
+// sample_alpha_cpp
+arma::mat sample_alpha_cpp(arma::mat y_tpfp, arma::vec C_tpfp, arma::mat alpha_tpfp);
+RcppExport SEXP _hmmgibbs_sample_alpha_cpp(SEXP y_tpfpSEXP, SEXP C_tpfpSEXP, SEXP alpha_tpfpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type y_tpfp(y_tpfpSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type C_tpfp(C_tpfpSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type alpha_tpfp(alpha_tpfpSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_alpha_cpp(y_tpfp, C_tpfp, alpha_tpfp));
+    return rcpp_result_gen;
+END_RCPP
+}
 // log_u_pdf_check
 double log_u_pdf_check(double x, arma::vec bj, double d1, double beta, double sigma2, arma::vec Ci_tp);
 RcppExport SEXP _hmmgibbs_log_u_pdf_check(SEXP xSEXP, SEXP bjSEXP, SEXP d1SEXP, SEXP betaSEXP, SEXP sigma2SEXP, SEXP Ci_tpSEXP) {
@@ -54,11 +67,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sample_u2p_cpp
+arma::vec sample_u2p_cpp(arma::vec b_tpfp, double d_tpfp, arma::vec beta_tpfp, double rho_u, arma::mat C_tpfp_mat, arma::mat C_fptp_mat, arma::vec u_fp_tp);
+RcppExport SEXP _hmmgibbs_sample_u2p_cpp(SEXP b_tpfpSEXP, SEXP d_tpfpSEXP, SEXP beta_tpfpSEXP, SEXP rho_uSEXP, SEXP C_tpfp_matSEXP, SEXP C_fptp_matSEXP, SEXP u_fp_tpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type b_tpfp(b_tpfpSEXP);
+    Rcpp::traits::input_parameter< double >::type d_tpfp(d_tpfpSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type beta_tpfp(beta_tpfpSEXP);
+    Rcpp::traits::input_parameter< double >::type rho_u(rho_uSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type C_tpfp_mat(C_tpfp_matSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type C_fptp_mat(C_fptp_matSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type u_fp_tp(u_fp_tpSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_u2p_cpp(b_tpfp, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_hmmgibbs_sample_alpha_cpp", (DL_FUNC) &_hmmgibbs_sample_alpha_cpp, 3},
     {"_hmmgibbs_log_u_pdf_check", (DL_FUNC) &_hmmgibbs_log_u_pdf_check, 6},
     {"_hmmgibbs_sample_u_cpp_check", (DL_FUNC) &_hmmgibbs_sample_u_cpp_check, 7},
     {"_hmmgibbs_sample_u_cpp", (DL_FUNC) &_hmmgibbs_sample_u_cpp, 5},
+    {"_hmmgibbs_sample_u2p_cpp", (DL_FUNC) &_hmmgibbs_sample_u2p_cpp, 7},
     {NULL, NULL, 0}
 };
 
