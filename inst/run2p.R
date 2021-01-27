@@ -30,7 +30,7 @@ u_tp_fp <- mvrnorm(N, rep(0, 2), Sigma_u)
 ## time varying covariates
 pp <- 3
 xcovs <- cbind(rep(1,N*wave_num),matrix(rnorm(N*wave_num*(pp-1)), nrow=N*wave_num))
-
+# xcovs <- array(matrix(rnorm(N*wave_num*(pp-1))), c(N, pp, wave_num))
 ## time variant intercepts and coefficients for C (random groups)
 # b_tp <- c(0, 1, 2)
 # b_fp <- c(1, 0, -1)
@@ -52,9 +52,9 @@ ind <- rep(1:N, each=3)
 
 ## generate responses for wave 1
 ## generate lambda_1^{tp}
-tmp <- xcovs %*% b_tp[,1] + d_tp * u_tp_fp[,1]
+tmp <- xcovs[1:N,] %*% b_tp[,1] + d_tp * u_tp_fp[,1]
 lambda_1_tp <- 1 / (1+exp(-tmp))
-tmp <- xcovs %*% b_fp[,1] + d_fp * u_tp_fp[,2]
+tmp <- xcovs[1:N,] %*% b_fp[,1] + d_fp * u_tp_fp[,2]
 lambda_1_fp <- 1 / (1+exp(-tmp))
 
 ## generate latent class variables C_1_tp, C_1_fp
@@ -68,9 +68,9 @@ for(i in 1:N){
   y_fp[i,] <- rbinom(J, 1, prob = 1 / (1 + exp(-pi_fp_tmp)))
 }
 ## generate responses for wave 2
-tmp <- xcovs %*% b_tp[,2] + beta_tp[1] * C_1_tp + beta_tp[2] * C_1_fp + u_tp_fp[,1]
+tmp <- xcovs[N+1:N,] %*% b_tp[,2] + beta_tp[1] * C_1_tp + beta_tp[2] * C_1_fp + u_tp_fp[,1]
 lambda_2_tp <- 1 / (1 + exp(-tmp))
-tmp <- xcovs %*% b_fp[,2] + beta_fp[1] * C_1_fp + beta_fp[2] * C_1_tp + u_tp_fp[,2]
+tmp <- xcovs[N+1:N,] %*% b_fp[,2] + beta_fp[1] * C_1_fp + beta_fp[2] * C_1_tp + u_tp_fp[,2]
 lambda_2_fp <- 1 / (1 + exp(-tmp))
 C_2_tp <- rbinom(N, 1, prob = lambda_2_tp)
 C_2_fp <- rbinom(N, 1, prob = lambda_2_fp)
@@ -81,9 +81,9 @@ for(i in 1:N){
   y_fp[N+i,] <- rbinom(J, 1, prob = 1 / (1+ exp(-pi_fp_tmp)))
 }
 ## generate responses for wave 3
-tmp <- xcovs %*% b_tp[,3] + beta_tp[1] * C_2_tp + beta_tp[2] * C_2_fp + u_tp_fp[,1]
+tmp <- xcovs[2*N+1:N,] %*% b_tp[,3] + beta_tp[1] * C_2_tp + beta_tp[2] * C_2_fp + u_tp_fp[,1]
 lambda_3_tp <- 1 / (1 + exp(-tmp))
-tmp <- xcovs %*% b_fp[,3] + beta_fp[1] * C_2_fp + beta_fp[2] * C_2_tp + u_tp_fp[,2]
+tmp <- xcovs[2*N+1:N,] %*% b_fp[,3] + beta_fp[1] * C_2_fp + beta_fp[2] * C_2_tp + u_tp_fp[,2]
 lambda_3_fp <- 1 / (1 + exp(-tmp))
 C_3_tp <- rbinom(N, 1, prob = lambda_3_tp)
 C_3_fp <- rbinom(N, 1, prob = lambda_3_fp)
@@ -106,7 +106,7 @@ struc_params0 <- list(b_tp = b_tp,
                       beta_tp = beta_tp,
                       beta_fp = beta_fp,
                       rho_u = rho_u)
-res <- latent_trans2p(y_tp, y_fp, C_it_tp, C_it_fp, u_tp_fp[,1], u_tp_fp[,2],
+res <- latent_trans2p(y_tp, y_fp, xcovs, C_it_tp, C_it_fp, u_tp_fp[,1], u_tp_fp[,2],
                       alpha_tp0, alpha_fp0, struc_params0, mcmc_len = 1000)
 alpha_tp
 matrix(colMeans(res$alpha_tp_draws),2)

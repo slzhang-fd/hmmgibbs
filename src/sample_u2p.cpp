@@ -27,7 +27,7 @@ double log_u2p_pdf(double x, void* params){
 }
 
 // [[Rcpp::export]]
-arma::vec sample_u2p_cpp(arma::mat b_tpfp, arma::mat xcovs, double d_tpfp,
+arma::vec sample_u2p_cpp(arma::mat it_inter, arma::mat xcovs, double d_tpfp,
                          arma::vec beta_tpfp, double rho_u,
                          arma::mat C_tpfp_mat, arma::mat C_fptp_mat,
                          arma::vec u_fp_tp){
@@ -41,7 +41,7 @@ arma::vec sample_u2p_cpp(arma::mat b_tpfp, arma::mat xcovs, double d_tpfp,
 
   unsigned int N = C_tpfp_mat.n_rows;
   arma::vec u_tpfp_res(N);
-  arma::mat it_inter = xcovs * b_tpfp;
+  // arma::mat it_inter = xcovs * b_tpfp;
 
   log_u2p_param log_u2p_data;
   log_u2p_data.rho_u = rho_u;

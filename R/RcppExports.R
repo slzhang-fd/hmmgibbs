@@ -20,7 +20,7 @@ sample_u_cpp <- function(bj, d1, beta, sigma2, C_mat) {
     .Call('_hmmgibbs_sample_u_cpp', PACKAGE = 'hmmgibbs', bj, d1, beta, sigma2, C_mat)
 }
 
-sample_u2p_cpp <- function(b_tpfp, xcovs, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp) {
-    .Call('_hmmgibbs_sample_u2p_cpp', PACKAGE = 'hmmgibbs', b_tpfp, xcovs, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp)
+sample_u2p_cpp <- function(it_inter, xcovs, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp) {
+    .Call('_hmmgibbs_sample_u2p_cpp', PACKAGE = 'hmmgibbs', it_inter, xcovs, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp)
 }
 

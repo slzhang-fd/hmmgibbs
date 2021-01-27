@@ -68,12 +68,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // sample_u2p_cpp
-arma::vec sample_u2p_cpp(arma::mat b_tpfp, arma::mat xcovs, double d_tpfp, arma::vec beta_tpfp, double rho_u, arma::mat C_tpfp_mat, arma::mat C_fptp_mat, arma::vec u_fp_tp);
-RcppExport SEXP _hmmgibbs_sample_u2p_cpp(SEXP b_tpfpSEXP, SEXP xcovsSEXP, SEXP d_tpfpSEXP, SEXP beta_tpfpSEXP, SEXP rho_uSEXP, SEXP C_tpfp_matSEXP, SEXP C_fptp_matSEXP, SEXP u_fp_tpSEXP) {
+arma::vec sample_u2p_cpp(arma::mat it_inter, arma::mat xcovs, double d_tpfp, arma::vec beta_tpfp, double rho_u, arma::mat C_tpfp_mat, arma::mat C_fptp_mat, arma::vec u_fp_tp);
+RcppExport SEXP _hmmgibbs_sample_u2p_cpp(SEXP it_interSEXP, SEXP xcovsSEXP, SEXP d_tpfpSEXP, SEXP beta_tpfpSEXP, SEXP rho_uSEXP, SEXP C_tpfp_matSEXP, SEXP C_fptp_matSEXP, SEXP u_fp_tpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type b_tpfp(b_tpfpSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type it_inter(it_interSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type xcovs(xcovsSEXP);
     Rcpp::traits::input_parameter< double >::type d_tpfp(d_tpfpSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type beta_tpfp(beta_tpfpSEXP);
@@ -81,7 +81,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type C_tpfp_mat(C_tpfp_matSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type C_fptp_mat(C_fptp_matSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type u_fp_tp(u_fp_tpSEXP);
-    rcpp_result_gen = Rcpp::wrap(sample_u2p_cpp(b_tpfp, xcovs, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp));
+    rcpp_result_gen = Rcpp::wrap(sample_u2p_cpp(it_inter, xcovs, d_tpfp, beta_tpfp, rho_u, C_tpfp_mat, C_fptp_mat, u_fp_tp));
     return rcpp_result_gen;
 END_RCPP
 }
