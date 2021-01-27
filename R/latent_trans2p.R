@@ -143,6 +143,7 @@ sample_C <- function(y_tpfp, u_tpfp, u_fptp, C_tpfp, C_fptp,
     - log(1+exp(tmp)) +
     C_tpfp[N+1:N] * tmp10 - log(1+exp(tmp10)) +
     C_fptp[N+1:N] * tmp20 - log(1+exp(tmp20))
+  # cat("range0: ", range(parts0),", range1: ", range(parts1), '\n')
   C_tpfp[1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
 
   tmp <- it_inter_tpfp[,2] + beta_tpfp[1] * C_tpfp[1:N] + beta_tpfp[2] * C_fptp[1:N] + u_tpfp
@@ -158,11 +159,13 @@ sample_C <- function(y_tpfp, u_tpfp, u_fptp, C_tpfp, C_fptp,
     - log(1+exp(tmp)) +
     C_tpfp[2*N+1:N] * tmp10 - log(1+exp(tmp10))+
     C_fptp[2*N+1:N] * tmp20 - log(1+exp(tmp20))
+  # cat("range0: ", range(parts0),", range1: ", parts1, '\n')
   C_tpfp[N+1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
 
   tmp <- it_inter_tpfp[,3] + beta_tpfp[1] * C_tpfp[N+1:N] + beta_tpfp[2] * C_fptp[N+1:N] + u_tpfp
   parts1 <- rowSums(lambda1 * y_tpfp[2*N+1:N,] - log(1+exp(lambda1))) + tmp - log(1+exp(tmp))
   parts0 <- rowSums(lambda0 * y_tpfp[2*N+1:N,] - log(1+exp(lambda0))) - log(1+exp(tmp))
+  # cat("range0: ", range(parts0),", range1: ", parts1, '\n')
   C_tpfp[2*N+1:N] <- rbinom(N, 1, prob = 1 / (1 + exp(parts0 - parts1)))
   C_tpfp
 }
@@ -187,12 +190,14 @@ latent_trans2p <- function(y_tp, y_fp, xcovs,
     struc_params0 <- struc_temp$params
     u_tp0 <- struc_temp$u_tp0
     u_fp0 <- struc_temp$u_fp0
+    # cat('dim it_inter_tp: ', dim(struc_temp$it_inter_tp),'\n')
+    # cat('it_inter_tp range:', apply(struc_temp$it_inter_tp, 2, range),'\n')
     ## sample C_it_tp
     C_it_tp <- sample_C(y_tp, u_tp0, u_fp0, C_it_tp, C_it_fp, alpha_tp0, alpha_fp0,
-                        struc_params0$it_inter_tp, struc_params0$it_inter_fp, struc_params0$d_tp,
+                        struc_temp$it_inter_tp, struc_temp$it_inter_fp, struc_params0$d_tp,
                         struc_params0$beta_tp, struc_params0$beta_fp)
     C_it_fp <- sample_C(y_fp, u_fp0, u_tp0, C_it_fp, C_it_tp, alpha_fp0, alpha_tp0,
-                        struc_params0$it_inter_fp, struc_params0$it_inter_tp, struc_params0$d_fp,
+                        struc_temp$it_inter_fp, struc_temp$it_inter_tp, struc_params0$d_fp,
                         struc_params0$beta_fp, struc_params0$beta_tp)
     # store results
     alpha_tp_draws[iter,] <- c(alpha_tp0)
